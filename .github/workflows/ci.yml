@@ -1,0 +1,79 @@
+---
+jobs:
+  linux:
+    name: Linux
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"gcc","perl_version":"5.40.5"},
+          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.3","configure":"-Duselongdouble","variant":"longdoubles"},
+          {"platform_name":"ubuntu-arm","os":"ubuntu-24.04-arm","arch":"aarch64","toolchain":"gcc","perl_version":"5.40.5"},
+          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"clang","perl_version":"5.40.5"},
+          {"platform_name":"ubuntu-arm","os":"ubuntu-24.04-arm","arch":"aarch64","toolchain":"clang","perl_version":"5.40.5"}
+        ]
+      task: |
+        perl -V
+        #~ Install cpanm via its canonical self-bootstrap (installs the real
+        #~ `cpanm` binary into the active perl's bin dir). `command -v cpanm`
+        #~ is a hard fail point that catches any no-op.
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        cpanm -v .
+  macos:
+    name: macOS
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"macos","os":"macos-15","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.3"},
+          {"platform_name":"macos-intel","os":"macos-15-intel","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.3"},
+          {"platform_name":"macos","os":"macos-15","arch":"aarch64","toolchain":"clang","perl_version":"5.42.3"},
+          {"platform_name":"macos-intel","os":"macos-15-intel","arch":"x86_64","toolchain":"clang","perl_version":"5.42.3"}
+        ]
+      task: |
+        perl -V
+        #~ Install cpanm via its canonical self-bootstrap (installs the real
+        #~ `cpanm` binary into the active perl's bin dir). `command -v cpanm`
+        #~ is a hard fail point that catches any no-op.
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        cpanm -v .
+  results:
+    if: always()
+    name: Summary
+    needs:
+      - linux
+      - macos
+      - windows
+    uses: sanko/workflow-testing/.github/workflows/results-summary.yml@main
+  windows:
+    name: Windows
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"windows","os":"windows-latest","arch":"x86_64","toolchain":"gcc","prepare":"choco install strawberryperl"},
+          {"platform_name":"windows","os":"windows-latest","arch":"x86_64","toolchain":"clang","prepare":"choco install llvm strawberryperl"}
+        ]
+      task: |
+        export PATH="/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
+        perl -e 'print qq(perl=\$^X :: \$^O\n)'
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        cpanm -v .
+name: CI
+on:
+  pull_request: ~
+  push:
+    branches:
+      - main
+      - dev
+      - dev-repair
+  workflow_dispatch: ~
+permissions:
+  actions: read
+  contents: read
