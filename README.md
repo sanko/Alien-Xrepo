@@ -180,13 +180,9 @@ Installs (if missing) and fetches the metadata for a package.
 
 Resolution is staged so repeat calls avoid the xmake process startup cost entirely:
 
-1. A warm cache hit replays the memorized fetch result with no `xrepo` invocation. The entry is only trusted while its
-recorded install directory still exists on disk, and stale entries prune themselves. (See the **cache** constructor
-option to disable.)
-2. Otherwise `fetch --json` is tried first: an already-installed package answers with real paths immediately and the
-mutating `xrepo install` is skipped. That single fetch is also memorized for next time.
-3. Only when a package truly is missing does `xrepo install` run, followed by a mandatory fetch to learn where its output
-landed.
+- 1. A warm cache hit replays the memorized fetch result with no `xrepo` invocation. The entry is only trusted while its recorded install directory still exists on disk, and stale entries prune themselves. (See the **cache** constructor option to disable.)
+- 2. Otherwise `fetch --json` is tried first: an already-installed package answers with real paths immediately and the mutating `xrepo install` is skipped. That single fetch is also memorized for next time.
+- 3. Only when a package truly is missing does `xrepo install` run, followed by a mandatory fetch to learn where its output landed.
 
 - **$package\_name**
 
@@ -471,7 +467,7 @@ $repo->update_repo( 'main' ); # Update specific repo
 
 Updates the local package lists from the remote repositories.
 
-# CACHE
+# Cache System
 
 `install` avoids paying xmake's process-startup cost on every call. Each successful resolution is memorized as a small
 JSON record and replayed on the next launch, so a long-lived demo (e.g. ["webui.pl" in eg](https://metacpan.org/pod/eg#webui.pl)) or a build loop that re-runs

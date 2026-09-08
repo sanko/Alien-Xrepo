@@ -189,21 +189,11 @@ Resolution is staged so repeat calls avoid the xmake process startup cost entire
 
 =over
 
-=item 1.
+=item 1. A warm cache hit replays the memorized fetch result with no C<xrepo> invocation. The entry is only trusted while its recorded install directory still exists on disk, and stale entries prune themselves. (See the B<cache> constructor option to disable.)
 
-A warm cache hit replays the memorized fetch result with no C<xrepo> invocation. The entry is only trusted while its
-recorded install directory still exists on disk, and stale entries prune themselves. (See the B<cache> constructor
-option to disable.)
+=item 2. Otherwise C<fetch --json> is tried first: an already-installed package answers with real paths immediately and the mutating C<xrepo install> is skipped. That single fetch is also memorized for next time.
 
-=item 2.
-
-Otherwise C<fetch --json> is tried first: an already-installed package answers with real paths immediately and the
-mutating C<xrepo install> is skipped. That single fetch is also memorized for next time.
-
-=item 3.
-
-Only when a package truly is missing does C<xrepo install> run, followed by a mandatory fetch to learn where its output
-landed.
+=item 3. Only when a package truly is missing does C<xrepo install> run, followed by a mandatory fetch to learn where its output landed.
 
 =back
 
@@ -472,13 +462,13 @@ Removes a custom repository.
 
 Updates the local package lists from the remote repositories.
 
-=head1 CACHE
+=head1 Cache System
 
 C<install> avoids paying xmake's process-startup cost on every call. Each successful resolution is memorized as a small
 JSON record and replayed on the next launch, so a long-lived demo (e.g. L<eg/webui.pl>) or a build loop that re-runs
 against the same store starts instantly once a package is resolved.
 
-=over 4
+=over
 
 =item * B<What is stored>
 

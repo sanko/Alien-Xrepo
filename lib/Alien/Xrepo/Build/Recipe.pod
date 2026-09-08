@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Alien::Xrepo::Build::Recipe - load and validate an xrepo.json recipe
+Alien::Xrepo::Build::Recipe - Load and validate an xrepo.json recipe
 
 =head1 SYNOPSIS
 

@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Alien::Xrepo::Runtime - consumer class for xrepo-based Aliens (no generated ConfigData)
+Alien::Xrepo::Runtime - Consumer class for xrepo-based Aliens
 
 =head1 SYNOPSIS
 

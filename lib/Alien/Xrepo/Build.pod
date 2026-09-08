@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Alien::Xrepo::Build - alienfile-shaped Build Engine Where Every Stage is xrepo
+Alien::Xrepo::Build - alienfile-shaped build engine where every stage is xrepo
 
 =head1 SYNOPSIS
 
