@@ -827,12 +827,90 @@ removes a package even when others still depend on it. It returns the underlying
 Note that this edits the shared store unlike a builder's prune, which slims the C<share> dir a distribution ships,
 C<uninstall> frees space in the store you manage yourself.
 
+=head1 EXAMPLE DISTRIBUTIONS
+
+Beyond the snippets above, this distribution bundles complete, installable C<Alien-*> example distributions under
+F<eg/examples/>. Each is a real dist: its C<Build.PL> (L<Alien::Xrepo::MB>) or C<Makefile.PL> (L<Alien::Xrepo::MM>), a
+single recipe in the module, a snapshot written into the share dir on build, and C<t/00_compile.t> plus
+C<t/01_delegation.t> covering both lazy pre-resolution defaults and the resolved accessors. The recipe is the only
+declaration: the build engine and the runtime layer consume the same C<recipe()> method.
+
+=over
+
+=item * L<Exotic::SDL3> - C<Build.PL> (L<Module::Build>). A B<multi-package family>: L<SDL3> core plus the C<_image>,
+C<_ttf>, and C<_mixer> extensions, each a B<shared> library (xrepo builds SDL3 static by default, and L<Affix> / L<FFI::Platypus>
+need a real C<.dll> / C<.so> / C<.dylib>). It also carries a local C<recipes/> mini xmake-repo (the C<libsdl3_ttf> override)
+registered through C<local_repos>, so the recipe declares both the runtime description and everything the engine needs to
+reproduce the build. Three consumers in F<eg/> prove the binding styles: C<Affix.pl>, C<Platypus.pl>, and C<Inline.pl>.
+
+=item * C<Exotic::Ninja> - C<Build.PL> (L<Module::Build>). A B<binary tool> dist (kind: binary, not a library). The consumer
+(F<eg/ninja_version.pl>) resolves the dist hermetically from its snapshot and runs the shipped C<ninja> from C<bin_dir>;
+C<prepend_to_path> does the same without manual C<PATH> assembly.
+
+=item * C<Exotic::Zlib> - C<Build.PL> (L<Module::Build>). A B<static> zlib for C<cc_lib_flags>-style consumers (F<eg/zlib_inline.pl>
+builds C code with L<Inline::C>). zlib's precompiled Windows archive links cleanly under MinGW, unlike the removed C<Exotic-SQLite3>
+example, so the default toolchain works everywhere.
+
+=item * C<Exotic::Zstandard> - C<Build.PL> (Module::Build). A B<shared> C<zstd> with three F<eg/> consumers: C<Affix.pl>,
+C<Affix_compress.pl>, and C<Platypus.pl>.
+
+=item * C<Exotic::Lsquic> - C<Build.PL> (Module::Build). The simplest recipe shape, a B<bare package name> (C<lsquic>, a QUIC
+transport library), migrated from the old vendored F<inc/MyBuilder.pm> approach to a thin C<Alien::Xrepo::MB> C<Build.PL>.
+
+=item * L<Exotic::Raylib6> - C<Makefile.PL> (L<Alien::Xrepo::MM>). The flagship EUMM example: raylib built B<shared> and
+B<version-pinned> (C<version =E<gt> '6.0.x'>), so the exact-match probe falls through to a fresh
+C<xrepo install raylib 6.0.x> and the resolved package never drifts. C<make> builds it, C<make install> ships the DLL and
+snapshot inside F<blib/lib/auto/share/dist/Exotic-Raylib6/>, and F<eg/raylib_version.pl> attaches C<TextToUpper> with
+L<FFI::Platypus> straight off the installed library.
+
+=back
+
+Copy any of these as a starting point; rename the module, adjust C<recipe()>, and your dist builds, installs, and
+consumes the same way.
+
+=head1 STANDALONE SCRIPTS (eg/)
+
+The loose scripts directly in F<eg/> (not the example distributions above) are runnable tours of the C<Alien::Xrepo>
+API. Each does a real install on first run and is commented so sections can be commented out:
+
+=over
+
+=item * F<eg/alien_xrepo.pl> -- the broadest walkthrough: list remote repositories, scan what is installed, install
+C<libvorbis> (shared), install C<libpng> with cross/optimization options (C<kind>, C<plat>, C<arch>, C<mode>,
+C<configs>), then bind single functions with L<Affix> (C<zlib>, C<sqlite3>) and L<FFI::Platypus> (C<lz4>).
+
+=item * F<eg/xrepo_binary.pl> -- the binary-tool walkthrough: install C<ninja> and run it two ways, straight from
+C<bin_dir> or with C<bin_dir> prepended to C<PATH>.
+
+=item * F<eg/xrepo_inline_c.pl> -- install C<libpng> and C<zlib> together, merge their include/link dirs, and bind an
+L<Inline::C> function that returns both versions from one C<C> block.
+
+=item * F<eg/xrepo_features.pl> -- a feature tour with toggles: repositories/search, install plus C<fetch> flags and
+C<find_header>, the dependency graph as Graphviz C<DOT>, a project-local isolated store (C<installdir>) with C<scan>
+and C<fetch> against it, binary tools including the C<python> interpreter, third-party managers (C<vcpkg::>,
+C<conan::>, C<brew::>) gated behind C<--third-party>, offline C<download>, C<env> with C<show>, and C<uninstall>/C<clean>
+(gated behind C<--clean>).
+
+=item * F<eg/xrepo_dependency_graph.pl> -- C<info( depgraph =E<gt> 1, format =E<gt> 'dot')> for C<libsdl3_ttf>, written
+to F<deps.dot> for C<dot>.
+
+=item * F<eg/webui.pl> -- a complete object-oriented desktop-app demo: install the C<webui> library (shared), wrap it
+with L<Affix> signatures (enums, structs, C callbacks), register synchronous element callbacks (C<webui_bind>) and
+async, response-capable ones surfaced to JavaScript as Promises (C<webui_interface_bind> /
+C<webui_interface_set_response>), and push state into the page with C<webui_run>. It opens a window on your machine and
+blocks on C<webui_wait> -- the long-lived demo the L</"Cache System"> section mentions.
+
+=back
+
 =head1 SEE ALSO
 
 L<https://xrepo.xmake.io>, L<https://packages.xmake.io/>
 
-L<Affix>, L<Affix::Wrap>, L<Alien::Xmake>, L<Alien::Xrepo::Build>, L<Alien::Xrepo::Runtime>, L<FFI::Platypus>,
-L<Inline::C>
+L<Alien::Xmake>, L<Alien::Xrepo::Build>, L<Alien::Xrepo::Runtime>
+
+L<Alien::Xrepo::MB>, L<Alien::Xrepo::MM>
+
+L<Affix>, L<Affix::Wrap>, L<FFI::Platypus>, L<Inline::C>
 
 =head1 LICENSE
 

@@ -14,6 +14,25 @@ Alien::Xrepo::Runtime - Consumer class for xrepo-based Aliens
     use Alien::Xrepo::Runtime;
 
     class Alien::Zstd : isa(Alien::Xrepo::Runtime) {
+        method recipe {
+            return {
+                name        => 'Alien-Zstd',
+                packages    => [ { name => 'zstd', kind => 'shared' } ],
+                local_repos => ['vendor/recipes'],   # optional, used by the build engine
+            };
+        }
+    }
+
+    1;
+
+    # A dist with no extra recipe fields may declare only pkg_name instead:
+
+    package Alien::Zstd;
+    use v5.40;
+    use experimental 'class';
+    use Alien::Xrepo::Runtime;
+
+    class Alien::Zstd : isa(Alien::Xrepo::Runtime) {
         method pkg_name {
             return [ { name => 'zstd', kind => 'shared' } ];
         }
@@ -30,7 +49,32 @@ class works with no build step at all.
 
 Optionally a C<xrepo.json> recipe instead of an inline C<pkg_name>, and a snapshot written by L<Alien::Xrepo::Build>
 (auto-detected from the dist share dir, see C<autodetect_snapshot>) makes resolution fully hermetic: the accessors then
-serve recorded paths and never spawn xrepo.
+serve recorded paths and never spawn xrepo. When the build installed the packages into the dist share dir
+(C<share_dir>), the snapshot records share-relative paths; they are resolved against the snapshot file's own directory,
+so the same snapshot serves a source-tree C<blib> build and the installed File::ShareDir tree alike.
+
+=head2 Describing the dist once: the recipe()
+
+A dist that ships extra recipe fields (C<local_repos>, C<pkg_roots>, C<hooks>, C<defaults>) wants a single declaration
+that serves both phases. A subclass may instead declare C<recipe>, honored when no C<recipe>/C<pkg_name> constructor
+argument is supplied (and taking precedence over a C<pkg_name> method). It may return:
+
+=over
+
+=item * a hashref of recipe fields -- C<name>, C<packages>, C<defaults>, C<pkg_roots>, C<local_repos>, C<hooks>,
+exactly as L<Alien::Xrepo::Build::Recipe> accepts inline;
+
+=item * an C<Alien::Xrepo::Build::Recipe> object; or
+
+=item * a path (file or directory) to an C<xrepo.json>.
+
+=back
+
+The build engine, through L<Alien::Xrepo::Build>, consumes the very same hashref (it may be given directly as the
+C<recipe =E<gt> ...> argument), so the distribution's description lives in one place -- the class -- and no
+C<xrepo.json> needs to exist at all. A recipe's C<defaults> are treated as ambient install options under every package
+during dynamic resolution, matching the install profile the build engine derives, so dynamic and hermetic resolution
+agree.
 
 =head1 METHODS
 
@@ -57,8 +101,8 @@ Link flags for static linking. An alias of C<libs( )> in this release.
 
 =item C<libpath( [$pkg] )>
 
-Absolute path to the package's runtime library (DLL/SO/dylib). C<undef> for a header-only package or when
-resolution failed.
+Absolute path to the package's runtime library (DLL/SO/dylib). C<undef> for a header-only package or when resolution
+failed.
 
 =item C<ffi_lib( [$pkg] )>
 
@@ -71,6 +115,17 @@ Absolute paths to every library file xrepo reported for the package.
 =item C<bin_dir( [$pkg] )>
 
 Executable directories (a tool package's C<bin>). An empty list when the package has none.
+
+=item C<prepend_to_path( [$pkg] )>
+
+Prepends the package's C<bin_dir> directories to C<$ENV{PATH}> (joined with the platform's path separator, C<PATH> on
+both POSIX and Windows) so a consumer can spawn the shipped tool -- e.g. C<Exotic::Ninja> -- without knowing where
+xrepo installed it. Returns the prepended directories, or an empty list (leaving C<PATH> untouched) when the package
+has none:
+
+    my $ninja = Exotic::Ninja->new;
+    $ninja->prepend_to_path;
+    system('ninja', '--version') == 0 or die 'ninja did not run';
 
 =item C<version( [$pkg] )>
 
@@ -86,13 +141,13 @@ The package's install root (where its files live), or C<undef> before resolution
 
 =item C<install_type( [$pkg] )>
 
-C<'share'> once the package has resolved, C<'system'> otherwise. In hermetic snapshot mode the value recorded
-in the snapshot is returned unchanged.
+C<'share'> once the package has resolved, C<'system'> otherwise. In hermetic snapshot mode the value recorded in the
+snapshot is returned unchanged.
 
 =item C<alt( $name )>
 
 An accessor bound to a non-primary package; C<alt> of the primary returns C<$self>. E.g. C<<
-Alien::SDL3->alt('libsdl3_ttf')->cflags >>.
+Exotic::SDL3->alt('libsdl3_ttf')->cflags >>.
 
 =item C<find_header( $file, [$pkg] )>
 
@@ -112,8 +167,8 @@ The recipe's normalized per-package definition hashref.
 
 =item C<split_flags( $flags, [$pkg] )>
 
-Splits a flag string on whitespace and returns the individual flags (Windows-safe list form). The package
-argument is accepted for compatibility with the other accessors but the split itself does not use it.
+Splits a flag string on whitespace and returns the individual flags (Windows-safe list form). The package argument is
+accepted for compatibility with the other accessors but the split itself does not use it.
 
 =back
 
@@ -131,12 +186,15 @@ argument is accepted for compatibility with the other accessors but the split it
         verbose      => 1,
     )
 
-Subclasses may also declare C<pkg_name> and C<install_opts> as methods, which the constructor honors when no
-constructor argument is supplied.
+C<recipe> is C<undef> by default; when set it may be an L<Alien::Xrepo::Build::Recipe> object, a file or directory path
+to an C<xrepo.json>, or a hashref of recipe fields (name, packages, defaults, pkg_roots, local_repos, hooks).
+
+Subclasses may also declare C<recipe>, C<pkg_name> and C<install_opts> as methods, which the constructor honors when no
+constructor argument is supplied. A subclass C<recipe> is preferred over C<pkg_name>.
 
 B<cache> (default 1) is forwarded to the engine created by this class, so C<cache =E<gt> 0> disables
-L<Alien::Xrepo|/CACHE>'s on-disk resolution cache for a fully live, one-spawn-per-package consumer. When
-C<repo =E<gt> ...> injects an engine, that engine's own cache setting is used instead.
+L<Alien::Xrepo/"Cache System">'s on-disk resolution cache for a fully live, one-spawn-per-package consumer. When C<repo
+=E<gt> ...> injects an engine, that engine's own cache setting is used instead.
 
 =head1 SEE ALSO
 

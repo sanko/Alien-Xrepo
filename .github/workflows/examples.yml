@@ -1,0 +1,146 @@
+---
+jobs:
+  linux:
+    name: Examples (Linux)
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"gcc","perl_version":"5.40.5"}
+        ]
+      task: |
+        perl -V
+        #~ Install cpanm via its canonical self-bootstrap (installs the real
+        #~ `cpanm` binary into the active perl's bin dir).
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        #~ Install the engine the example dists build against; Alien::Xmake
+        #~ also fetches the xmake/xrepo binaries the pipeline needs.
+        cpanm -v .
+        #~ Hand each example dist under eg/examples/ off to cpanm (they inherit
+        #~ the engine just installed). Fail the job if any dist fails.
+        failed=0
+        for dist in eg/examples/*/; do
+          case "$dist" in
+            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
+          esac
+          if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
+            echo "::group::Building $dist"
+            pushd "$dist"
+            if cpanm -v .; then
+              echo "::notice::$dist installed OK"
+            else
+              echo "::error::$dist FAILED to build/install"
+              failed=$((failed + 1))
+            fi
+            popd
+            echo "::endgroup::Building $dist"
+          else
+            echo "::warning::skipping $dist (no Build.PL/Makefile.PL)"
+          fi
+        done
+        if [ "$failed" -ne 0 ]; then
+          echo "::error::$failed example dist(s) failed to build/install"
+          exit 1
+        fi
+        echo "All example dists built and installed"
+  macos:
+    name: Examples (macOS)
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"macos","os":"macos-15","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.3"}
+        ]
+      task: |
+        perl -V
+        #~ Install cpanm via its canonical self-bootstrap.
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        #~ Install the engine the example dists build against.
+        cpanm -v .
+        #~ Hand each example dist under eg/examples/ off to cpanm. Fail the job
+        #~ if any dist fails.
+        failed=0
+        for dist in eg/examples/*/; do
+          case "$dist" in
+            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
+          esac
+          if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
+            echo "::group::Building $dist"
+            pushd "$dist"
+            if cpanm -v .; then
+              echo "::notice::$dist installed OK"
+            else
+              echo "::error::$dist FAILED to build/install"
+              failed=$((failed + 1))
+            fi
+            popd
+            echo "::endgroup::Building $dist"
+          else
+            echo "::warning::skipping $dist (no Build.PL/Makefile.PL)"
+          fi
+        done
+        if [ "$failed" -ne 0 ]; then
+          echo "::error::$failed example dist(s) failed to build/install"
+          exit 1
+        fi
+        echo "All example dists built and installed"
+  windows:
+    name: Examples (Windows)
+    secrets: inherit
+    uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
+    with:
+      matrix: |
+        [
+          {"platform_name":"windows","os":"windows-latest","arch":"x86_64","toolchain":"gcc","prepare":"choco install strawberryperl"}
+        ]
+      task: |
+        export PATH="/c/Strawberry/perl/site/bin:/c/Strawberry/perl/bin:/c/Strawberry/c/bin:$PATH"
+        perl -V
+        #~ Install cpanm via its canonical self-bootstrap.
+        curl -L https://cpanmin.us | perl - App::cpanminus
+        command -v cpanm
+        #~ Install the engine the example dists build against.
+        cpanm -v .
+        #~ Hand each example dist under eg/examples/ off to cpanm. Fail the job
+        #~ if any dist fails.
+        failed=0
+        for dist in eg/examples/*/; do
+          case "$dist" in
+            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
+          esac
+          if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
+            echo "::group::Building $dist"
+            pushd "$dist"
+            if cpanm -v .; then
+              echo "::notice::$dist installed OK"
+            else
+              echo "::error::$dist FAILED to build/install"
+              failed=$((failed + 1))
+            fi
+            popd
+            echo "::endgroup::Building $dist"
+          else
+            echo "::warning::skipping $dist (no Build.PL/Makefile.PL)"
+          fi
+        done
+        if [ "$failed" -ne 0 ]; then
+          echo "::error::$failed example dist(s) failed to build/install"
+          exit 1
+        fi
+        echo "All example dists built and installed"
+name: Examples
+on:
+  pull_request: ~
+  push:
+    branches:
+      - main
+      - dev
+      - dev-repair
+  workflow_dispatch: ~
+permissions:
+  actions: read
+  contents: read

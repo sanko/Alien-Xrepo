@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo v1.0.0 {
+class Alien::Xrepo v1.0.1 {
     use Alien::Xmake;
     use JSON::PP;
     use Digest::SHA qw[sha1_hex];
@@ -48,7 +48,7 @@ class Alien::Xrepo v1.0.0 {
         return;
     }
     #
-    class Alien::Xrepo::PackageInfo v1.0.0 {
+    class Alien::Xrepo::PackageInfo v1.0.1 {
         use Path::Tiny;
         field $includedirs : param : reader;
         field $libfiles    : param : reader;
@@ -93,8 +93,15 @@ class Alien::Xrepo v1.0.0 {
         }
     };
 
+    # Compose the full xrepo spec for a package: `<pkg> <version>` when pinned,
+    # the bare name otherwise. One argv element either way, so a version never
+    # splits on whitespace.
+    method _full_spec ( $pkg_spec, $version ) {
+        return defined $version && length $version ? "$pkg_spec $version" : $pkg_spec;
+    }
+
     method install ( $pkg_spec, $version //= (), %opts ) {
-        my $full_spec = defined $version && length $version ? "$pkg_spec $version" : $pkg_spec;
+        my $full_spec = $self->_full_spec( $pkg_spec, $version );
         local $ENV{XMAKE_THEME}          = $self->_theme(%opts);
         local $ENV{XMAKE_PKG_INSTALLDIR} = $self->_store_dir(%opts) if defined $self->_store_dir(%opts);
         local $ENV{XMAKE_PKG_CACHEDIR}   = $opts{cachedir}          if defined $opts{cachedir};
@@ -526,7 +533,7 @@ class Alien::Xrepo v1.0.0 {
 
     # Run `xrepo fetch` and return a parsed PackageInfo (or raw flags).
     method fetch ( $pkg_spec, $version //= (), %opts ) {
-        my $full_spec = defined $version && length $version ? "$pkg_spec $version" : $pkg_spec;
+        my $full_spec = $self->_full_spec( $pkg_spec, $version );
         local $ENV{XMAKE_THEME}          = $self->_theme(%opts);
         local $ENV{XMAKE_PKG_INSTALLDIR} = $self->_store_dir(%opts) if defined $self->_store_dir(%opts);
         local $ENV{XMAKE_PKG_CACHEDIR}   = $opts{cachedir}          if defined $opts{cachedir};

@@ -859,12 +859,72 @@ $repo->uninstall('fontconfig', force => 1); # remove even if still depended upon
 Note that this edits the shared store unlike a builder's prune, which slims the `share` dir a distribution ships,
 `uninstall` frees space in the store you manage yourself.
 
+# EXAMPLE DISTRIBUTIONS
+
+Beyond the snippets above, this distribution bundles complete, installable `Alien-*` example distributions under
+`eg/examples/`. Each is a real dist: its `Build.PL` ([Alien::Xrepo::MB](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3AMB)) or `Makefile.PL` ([Alien::Xrepo::MM](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3AMM)), a
+single recipe in the module, a snapshot written into the share dir on build, and `t/00_compile.t` plus
+`t/01_delegation.t` covering both lazy pre-resolution defaults and the resolved accessors. The recipe is the only
+declaration: the build engine and the runtime layer consume the same `recipe()` method.
+
+- [Exotic::SDL3](https://metacpan.org/pod/Exotic%3A%3ASDL3) - `Build.PL` ([Module::Build](https://metacpan.org/pod/Module%3A%3ABuild)). A **multi-package family**: [SDL3](https://metacpan.org/pod/SDL3) core plus the `_image`,
+`_ttf`, and `_mixer` extensions, each a **shared** library (xrepo builds SDL3 static by default, and [Affix](https://metacpan.org/pod/Affix) / [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus)
+need a real `.dll` / `.so` / `.dylib`). It also carries a local `recipes/` mini xmake-repo (the `libsdl3_ttf` override)
+registered through `local_repos`, so the recipe declares both the runtime description and everything the engine needs to
+reproduce the build. Three consumers in `eg/` prove the binding styles: `Affix.pl`, `Platypus.pl`, and `Inline.pl`.
+- `Exotic::Ninja` - `Build.PL` ([Module::Build](https://metacpan.org/pod/Module%3A%3ABuild)). A **binary tool** dist (kind: binary, not a library). The consumer
+(`eg/ninja_version.pl`) resolves the dist hermetically from its snapshot and runs the shipped `ninja` from `bin_dir`;
+`prepend_to_path` does the same without manual `PATH` assembly.
+- `Exotic::Zlib` - `Build.PL` ([Module::Build](https://metacpan.org/pod/Module%3A%3ABuild)). A **static** zlib for `cc_lib_flags`-style consumers (`eg/zlib_inline.pl`
+builds C code with [Inline::C](https://metacpan.org/pod/Inline%3A%3AC)). zlib's precompiled Windows archive links cleanly under MinGW, unlike the removed `Exotic-SQLite3`
+example, so the default toolchain works everywhere.
+- `Exotic::Zstandard` - `Build.PL` (Module::Build). A **shared** `zstd` with three `eg/` consumers: `Affix.pl`,
+`Affix_compress.pl`, and `Platypus.pl`.
+- `Exotic::Lsquic` - `Build.PL` (Module::Build). The simplest recipe shape, a **bare package name** (`lsquic`, a QUIC
+transport library), migrated from the old vendored `inc/MyBuilder.pm` approach to a thin `Alien::Xrepo::MB` `Build.PL`.
+- [Exotic::Raylib6](https://metacpan.org/pod/Exotic%3A%3ARaylib6) - `Makefile.PL` ([Alien::Xrepo::MM](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3AMM)). The flagship EUMM example: raylib built **shared** and
+**version-pinned** (`version => '6.0.x'`), so the exact-match probe falls through to a fresh
+`xrepo install raylib 6.0.x` and the resolved package never drifts. `make` builds it, `make install` ships the DLL and
+snapshot inside `blib/lib/auto/share/dist/Exotic-Raylib6/`, and `eg/raylib_version.pl` attaches `TextToUpper` with
+[FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus) straight off the installed library.
+
+Copy any of these as a starting point; rename the module, adjust `recipe()`, and your dist builds, installs, and
+consumes the same way.
+
+# STANDALONE SCRIPTS (eg/)
+
+The loose scripts directly in `eg/` (not the example distributions above) are runnable tours of the `Alien::Xrepo`
+API. Each does a real install on first run and is commented so sections can be commented out:
+
+- `eg/alien_xrepo.pl` -- the broadest walkthrough: list remote repositories, scan what is installed, install
+`libvorbis` (shared), install `libpng` with cross/optimization options (`kind`, `plat`, `arch`, `mode`,
+`configs`), then bind single functions with [Affix](https://metacpan.org/pod/Affix) (`zlib`, `sqlite3`) and [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus) (`lz4`).
+- `eg/xrepo_binary.pl` -- the binary-tool walkthrough: install `ninja` and run it two ways, straight from
+`bin_dir` or with `bin_dir` prepended to `PATH`.
+- `eg/xrepo_inline_c.pl` -- install `libpng` and `zlib` together, merge their include/link dirs, and bind an
+[Inline::C](https://metacpan.org/pod/Inline%3A%3AC) function that returns both versions from one `C` block.
+- `eg/xrepo_features.pl` -- a feature tour with toggles: repositories/search, install plus `fetch` flags and
+`find_header`, the dependency graph as Graphviz `DOT`, a project-local isolated store (`installdir`) with `scan`
+and `fetch` against it, binary tools including the `python` interpreter, third-party managers (`vcpkg::`,
+`conan::`, `brew::`) gated behind `--third-party`, offline `download`, `env` with `show`, and `uninstall`/`clean`
+(gated behind `--clean`).
+- `eg/xrepo_dependency_graph.pl` -- `info( depgraph => 1, format => 'dot')` for `libsdl3_ttf`, written
+to `deps.dot` for `dot`.
+- `eg/webui.pl` -- a complete object-oriented desktop-app demo: install the `webui` library (shared), wrap it
+with [Affix](https://metacpan.org/pod/Affix) signatures (enums, structs, C callbacks), register synchronous element callbacks (`webui_bind`) and
+async, response-capable ones surfaced to JavaScript as Promises (`webui_interface_bind` /
+`webui_interface_set_response`), and push state into the page with `webui_run`. It opens a window on your machine and
+blocks on `webui_wait` -- the long-lived demo the ["Cache System"](#cache-system) section mentions.
+
 # SEE ALSO
 
 [https://xrepo.xmake.io](https://xrepo.xmake.io), [https://packages.xmake.io/](https://packages.xmake.io/)
 
-[Affix](https://metacpan.org/pod/Affix), [Affix::Wrap](https://metacpan.org/pod/Affix%3A%3AWrap), [Alien::Xmake](https://metacpan.org/pod/Alien%3A%3AXmake), [Alien::Xrepo::Build](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ABuild), [Alien::Xrepo::Runtime](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ARuntime), [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus),
-[Inline::C](https://metacpan.org/pod/Inline%3A%3AC)
+[Alien::Xmake](https://metacpan.org/pod/Alien%3A%3AXmake), [Alien::Xrepo::Build](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ABuild), [Alien::Xrepo::Runtime](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ARuntime)
+
+[Alien::Xrepo::MB](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3AMB), [Alien::Xrepo::MM](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3AMM)
+
+[Affix](https://metacpan.org/pod/Affix), [Affix::Wrap](https://metacpan.org/pod/Affix%3A%3AWrap), [FFI::Platypus](https://metacpan.org/pod/FFI%3A%3APlatypus), [Inline::C](https://metacpan.org/pod/Inline%3A%3AC)
 
 # LICENSE
 
