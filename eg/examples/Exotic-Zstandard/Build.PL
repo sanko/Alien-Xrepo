@@ -5,7 +5,7 @@ Alien::Xrepo::MB->new(
     module_name   => 'Exotic::Zstandard',
     dist_abstract => 'Build & install zstd (Zstandard) via xrepo',
     dist_author   => 'Sanko Robinson',
-    dist_version  => '0.001',
+    dist_version  => 'v1.0.0',
     license           => 'artistic_2',
     xrepo_update_repo => 1,
     requires => {

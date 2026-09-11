@@ -31,13 +31,13 @@ sub make_builder {
         base_dir      => $args{root}->stringify,
         build_dir     => $args{root}->child('_b')->stringify,
         dist_abstract => 'x',
-        dist_version  => '0.001',
+        dist_version  => 'v1.0.0',
         license       => 'artistic_2',
         ( defined $args{snapshot} ? ( xrepo_snapshot => $args{snapshot} ) : () ),
     );
 }
 subtest 'loads as a Module::Build subclass' => sub {
-    my $b = Alien::Xrepo::MB->new( module_name => 'Exotic::Foo', base_dir => $dir, build_dir => $dir, dist_version => '0.001' );
+    my $b = Alien::Xrepo::MB->new( module_name => 'Exotic::Foo', base_dir => $dir, build_dir => $dir, dist_version => 'v1.0.0' );
     isa_ok $b, ['Module::Build'], 'isa Module::Build';
     is $b->xrepo_cache,     0,     'xrepo_cache defaults to 0';
     is $b->xrepo_snapshot,  undef, 'xrepo_snapshot defaults to undef (auto-derive)';

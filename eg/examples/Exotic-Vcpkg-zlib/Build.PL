@@ -1,10 +1,11 @@
 use v5.40;
+use strict;
+use warnings;
 use Alien::Xrepo::MB;
 #
 Alien::Xrepo::MB->new(
-    module_name        => 'Exotic::Lsquic',
-    dist_abstract      => 'Build & install lsquic (LiteSpeed QUIC) via xrepo',
-    dist_author        => 'Sanko Robinson',
+module_name        => 'Exotic::Vcpkg::zlib',
+    dist_abstract      => 'Install zlib via xrepo\'s vcpkg integration (third-party package manager)',
     dist_version       => 'v1.0.0',
     license            => 'artistic_2',
     xrepo_update_repo  => 1,

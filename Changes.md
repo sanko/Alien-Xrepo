@@ -11,14 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Alien::Xrepo::MB` and `Alien::Xrepo::MM`, generic Module::Build and ExtUtils::MakeMaker integrations for Alien distributions
 - Build engine `share_dir` option: per-package installs land under `<share>/<pkg>` via `installdir`, and the snapshot records share-relative paths so an installed dist resolves packages after relocation to the site sharedir.
-- Example distributions demonstrating the three recipe shapes:
-  - `Exotic-SDL3` (shared libraries for FFI consumers (FFI::Platypus and Affix), and Inline::C),
-  - `Exotic-Ninja`: binary tool shipped in `bin_dir`
-  - `Exotic-Zlib`: static library for `cc_lib_flags` consumers (Inline::C)
-  - `Exotic-Zstandard` and `Exotic-Lsquic` demonstrate `Alien::Xrepo::MB`
-  - `Exotic-Raylib6` example distribution on the MM harness
-  -`Exotic-SQLite3` example (currently not working...)
-- Recipe `version` pinning
+- Example distributions demonstrating the new recipe shapes:
+  - `Exotic::SDL3` installs multiple shared libraries for FFI consumers with one Alien
+  - `Exotic::Ninja` demos a binary tool alien
+  - `Exotic::Zstandard` and `Exotic::Lsquic` demonstrate `Alien::Xrepo::MB`
+  - `Exotic::Raylib6` example distribution on the using `Alien::Xrepo::MM`
+  - `Exotic::SQLite3`
+  - `Exotic::Zlib` demos static library building for `cc_lib_flags` consumers like Inline::C or XS
+  - `Exotic::Vcpkg::zlib` installs a lib from a 3rd party repo
+- Package `version` pinning
 
 ## [v1.0.0] - 2026-09-07
 

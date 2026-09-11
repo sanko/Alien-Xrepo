@@ -29,7 +29,7 @@ PM
 subtest 'loads and defaults' => sub {
     my $mm = Alien::Xrepo::MM->new( module_name => 'Exotic::Foo' );
     is $mm->module_name,       'Exotic::Foo', 'module_name';
-    is $mm->dist_version,      '0.001',       'dist_version defaults';
+    is $mm->dist_version,      'v1.0.0',      'dist_version defaults';
     is $mm->license,           'artistic_2',  'license defaults';
     is $mm->xrepo_cache,       0,             'xrepo_cache defaults to 0';
     is $mm->xrepo_update_repo, 0,             'xrepo_update_repo defaults to 0';
@@ -53,7 +53,7 @@ subtest 'write_makefile_args translate MB-style properties' => sub {
         module_name        => 'Exotic::Foo',
         dist_abstract      => 'x',
         dist_author        => 'Sanko Robinson',
-        dist_version       => '0.001',
+        dist_version       => 'v1.0.0',
         license            => 'zlib',
         requires           => { 'Alien::Xrepo::Runtime' => 0, 'File::ShareDir' => '1.00' },
         configure_requires => { 'ExtUtils::MakeMaker'   => 0 },
@@ -62,7 +62,7 @@ subtest 'write_makefile_args translate MB-style properties' => sub {
     );
     my %wm = $mm->_write_makefile_args;
     is $wm{NAME},    'Exotic::Foo', 'NAME';
-    is $wm{VERSION}, '0.001',       'VERSION';
+    is $wm{VERSION}, 'v1.0.0',      'VERSION';
     is $wm{LICENSE}, 'zlib',        'LICENSE';
     is $wm{PREREQ_PM}, { 'Alien::Xrepo::Runtime' => 0, 'File::ShareDir' => '1.00', 'Alien::Xrepo::MM' => 0, 'Test2::V0' => 0 },
         'PREREQ_PM unions requires, build_requires and test_requires';

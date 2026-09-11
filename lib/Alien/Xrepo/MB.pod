@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Alien::Xrepo::MB - Module::Build subclass that runs the xrepo build pipeline
+Alien::Xrepo::MB - A Module::Build subclass that runs the xrepo build pipeline
 
 =head1 SYNOPSIS
 
@@ -30,18 +30,18 @@ Alien::Xrepo::MB - Module::Build subclass that runs the xrepo build pipeline
 =head1 DESCRIPTION
 
 C<Alien::Xrepo::MB> is a L<Module::Build> subclass for the C<Alien::Xrepo> build engine. Running C<./Build> (which is
-what C<./Build test> does) first runs the xrepo pipeline through L<Alien::Xrepo::Build> and writes the hermetic
-run-time snapshot into the dist's share dir inside C<blib>, before the normal C<code> action runs.
+what C<./Build test> invokes) first runs the C<xrepo> pipeline through L<Alien::Xrepo::Build>. It writes the hermetic
+run-time snapshot into the distribution's C<share> directory inside C<blib> before the normal C<code> action runs.
 
-The dist contains no C<xrepo.json>: the alien class (C<< module_name >>) is loaded from C<lib/> and its C<recipe()>
-method is the single declaration for both the build engine and the run-time layer (see L<Alien::Xrepo::Runtime>).
-Packages are shallow-installed into the dist share dir, and the snapshot records share-relative paths, so consumers
-resolve from the dist's sharedir -- never the xmake cache -- and the same snapshot keeps working after C<< ./Build
-install >> relocates the sharedir.
+The dist contains no C<xrepo.json>. The Alien class (C<< module_name >>) is loaded from C<lib/>, and its C<recipe()>
+method acts as the single declaration for both the build engine and the run-time layer (see L<Alien::Xrepo::Runtime>).
+Packages are shallow-installed into the dist's C<share> directory, and the snapshot records share-relative paths. As a
+result, consumers resolve from the dist's C<share> directory (never the C<xmake> cache) and the same snapshot remains
+valid after C<< ./Build install >> relocates the directory.
 
 =head2 Staleness
 
-The pipeline only (re)runs when the snapshot is missing or older than any of
+The pipeline only (re)runs when the snapshot is missing or older than any of:
 
 =over
 
@@ -49,38 +49,28 @@ The pipeline only (re)runs when the snapshot is missing or older than any of
 
 =item * C<lib/<class>.pm>
 
-=item * the engine modules themselves (C<Alien::Xrepo::MB>, C<Alien::Xrepo::Build>,
-C<Alien::Xrepo::Runtime>, C<Alien::Xrepo::Build::Recipe>)
+=item * The engine modules themselves (C<Alien::Xrepo::MB>, C<Alien::Xrepo::Build>, C<Alien::Xrepo::Runtime>, C<Alien::Xrepo::Build::Recipe>)
 
-=item * any files under the dist's local C<recipes/> tree
+=item * Any files under the dist's local C<recipes/> tree
 
 =back
 
-mirroring L<Module::Build>'s C<copy_if_modified> semantics, so C<./Build test> does not rewrite an up-to-date snapshot.
+This mirrors L<Module::Build>'s C<copy_if_modified> semantics, ensuring C<./Build test> does not rewrite an up-to-date
+snapshot.
 
 =head1 PROPERTIES
 
-In addition to the normal L<Module::Build> properties:
+In addition to the standard L<Module::Build> properties, you can configure:
 
 =over
 
-=item * C<xrepo_snapshot> -- where to write the snapshot. Defaults to the
-conventional C<< blib/lib/auto/share/dist/<Dist>/xrepo-snapshot.json >> derived
-from the module name with C<::> -> C<-> (C<Alien::Zstandard> ->
-C<Alien-Zstandard>, C<Exotic::Zlib> -> C<Exotic-Zlib>). Set it
-explicitly when the dist name does not match that derivation.
+=item * C<xrepo_snapshot>: Where to write the snapshot. Defaults to the conventional C<< blib/lib/auto/share/dist/<Dist>/xrepo-snapshot.json >>, which is derived from the module name by translating C<::> to C<-> (e.g., C<Alien::Zstandard> becomes C<Alien-Zstandard>; C<Exotic::Zlib> becomes C<Exotic-Zlib>). Set this explicitly if the dist name does not match that derivation.
 
-=item * C<xrepo_share_dir> -- where packages are shallow-installed. Defaults to
-the snapshot's parent directory (the dist share dir).
+=item * C<xrepo_share_dir>: Where packages are shallow-installed. Defaults to the snapshot's parent directory (the dist's C<share> directory).
 
-=item * C<xrepo_cache> -- pass C<0> (the default) to bypass C<Alien::Xrepo>'s
-on-disk resolution cache so no cache file lands inside the sharedir; set to C<1>
-to keep the cache.
+=item * C<xrepo_cache>: Pass C<0> (the default) to bypass C<Alien::Xrepo>'s on-disk resolution cache so no cache file lands inside the C<share> directory. Set to C<1> to keep the cache.
 
-=item * C<xrepo_update_repo> -- pass C<1> to refresh xrepo's repository index
-(C<xrepo update-repo>) once and retry an install that fails. Useful when a
-stale registry reports a precompiled artifact with a checksum that no longer
-matches the mirror.
+=item * C<xrepo_update_repo>: Pass C<1> to refresh C<xrepo>'s repository index (C<xrepo update-repo>) once and retry an install that fails. Useful when a stale registry reports a precompiled artifact with a checksum that no longer matches the mirror.
 
 =back
 
@@ -88,7 +78,7 @@ matches the mirror.
 
 L<Alien::Xrepo::Build>, L<Alien::Xrepo::Runtime>, L<Alien::Xrepo>, L<Alien::Xrepo::MM>
 
-==head1 LICENSE
+=head1 LICENSE
 
 Copyright (C) Sanko Robinson.
 

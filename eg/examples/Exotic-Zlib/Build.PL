@@ -7,7 +7,7 @@ Alien::Xrepo::MB->new(
     module_name        => 'Exotic::Zlib',
     dist_abstract      => 'Build & install zlib (a static lib for cc_lib_flags consumers) via xrepo',
     dist_author        => 'Sanko Robinson',
-    dist_version       => '0.001',
+    dist_version       => 'v1.0.0',
     license            => 'artistic_2',
     xrepo_update_repo  => 1,
     requires           => { 'perl'             => 'v5.40.0', 'Alien::Xrepo::Runtime' => 0, 'File::ShareDir' => '1.00' },

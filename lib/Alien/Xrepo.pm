@@ -243,7 +243,9 @@ class Alien::Xrepo v1.0.1 {
             my $art = $info->{artifacts};
             if    ( ref $art eq 'HASH' && defined $art->{installdir} ) { $entry{installdir} = $art->{installdir}; }
             elsif ( defined $info->{installdir} )                      { $entry{installdir} = $info->{installdir}; }
-            if    ( @{ $info->{libfiles} // [] } )                     { $entry{libpath}    = $info->{libfiles}[0]; }
+            my $libs = $info->{libfiles} // [];
+            $libs = [$libs] unless ref $libs eq 'ARRAY';
+            if (@$libs) { $entry{libpath} = $libs->[0]; }
         }
         \%entry;
     }
@@ -279,8 +281,12 @@ class Alien::Xrepo v1.0.1 {
         my $art        = $info->{artifacts};
         my $installdir = ref $art eq 'HASH' && defined $art->{installdir} ? $art->{installdir} : $info->{installdir};
         return 1 if defined $installdir && -d $installdir;
-        for my $f ( @{ $info->{libfiles} // [] } ) { return 1 if -f $f; }
-        for my $d ( @{ $info->{bindirs}  // [] } ) { return 1 if -d $d; }
+        my $libs = $info->{libfiles} // [];
+        $libs = [$libs] unless ref $libs eq 'ARRAY';
+        for my $f (@$libs) { return 1 if -f $f; }
+        my $bins = $info->{bindirs} // [];
+        $bins = [$bins] unless ref $bins eq 'ARRAY';
+        for my $d (@$bins) { return 1 if -d $d; }
         ();
     }
 
@@ -326,10 +332,14 @@ class Alien::Xrepo v1.0.1 {
         return $info->libpath    if $ref eq 'Alien::Xrepo::PackageInfo' && defined $info->libpath;
         return () unless $ref eq 'HASH';
         my $art = $info->{artifacts};
-        return $art->{installdir}                                      if ref $art eq 'HASH' && defined $art->{installdir};
-        return $info->{installdir}                                     if defined $info->{installdir};
-        return path( $info->{libfiles}[0] )->parent->parent->stringify if @{ $info->{libfiles}    // [] };
-        return path( $info->{includedirs}[0] )->parent->stringify      if @{ $info->{includedirs} // [] };
+        return $art->{installdir}  if ref $art eq 'HASH' && defined $art->{installdir};
+        return $info->{installdir} if defined $info->{installdir};
+        my $libs = $info->{libfiles} // [];
+        $libs = [$libs] unless ref $libs eq 'ARRAY';
+        my $incs = $info->{includedirs} // [];
+        $incs = [$incs] unless ref $incs eq 'ARRAY';
+        return path( $libs->[0] )->parent->parent->stringify if @$libs;
+        return path( $incs->[0] )->parent->stringify         if @$incs;
         ();
     }
 
@@ -693,10 +703,14 @@ class Alien::Xrepo v1.0.1 {
     method _process_info ($info) {
         $info = $info->[0] if ref $info eq 'ARRAY';
         return () unless ref $info eq 'HASH';
-        my $libfiles   = $info->{libfiles}    // [];
-        my $incdirs    = $info->{includedirs} // [];
-        my $linkdirs   = $info->{linkdirs}    // [];
-        my $bindirs    = $info->{bindirs}     // [];
+        my $libfiles = $info->{libfiles} // [];
+        $libfiles = [$libfiles] unless ref $libfiles eq 'ARRAY';
+        my $incdirs = $info->{includedirs} // [];
+        $incdirs = [$incdirs] unless ref $incdirs eq 'ARRAY';
+        my $linkdirs = $info->{linkdirs} // [];
+        $linkdirs = [$linkdirs] unless ref $linkdirs eq 'ARRAY';
+        my $bindirs = $info->{bindirs} // [];
+        $bindirs = [$bindirs] unless ref $bindirs eq 'ARRAY';
         my $installdir = $info->{artifacts}{installdir};
         my $kind       = $info->{kind};
 

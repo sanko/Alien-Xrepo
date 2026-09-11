@@ -13,7 +13,7 @@ package Alien::Xrepo::MM v1.0.1 {
             module_name dist_abstract dist_author dist_version license
             base_dir xrepo_snapshot xrepo_share_dir xrepo_cache xrepo_update_repo
         ];
-        $self{dist_version}      //= '0.001';
+        $self{dist_version}      //= 'v1.0.0';
         $self{license}           //= 'artistic_2';
         $self{xrepo_cache}       //= 0;
         $self{xrepo_update_repo} //= 0;

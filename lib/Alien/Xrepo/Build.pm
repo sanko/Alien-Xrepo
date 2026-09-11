@@ -7,6 +7,7 @@ class Alien::Xrepo::Build v1.0.1 {
     use Alien::Xrepo::Build::Recipe;
     use Path::Tiny;
     use JSON::PP qw[encode_json decode_json];
+    use Config   ();
     #
     my @STAGES = qw[configure probe install gather export test];
     #
@@ -145,7 +146,7 @@ class Alien::Xrepo::Build v1.0.1 {
         $runtime_prop->{packages} ||= {};
         $runtime_prop->{errors}   ||= {};
         my $profile = $install_prop->{profile} // {};
-        for my $name ( $recipe->packages ) {
+        for my $name ( $self->_install_order ) {
             if ( my $root = $self->_pkg_root($name) ) {
                 $runtime_prop->{packages}{$name} = $self->_root_entry($root);
                 say "[xrepo] $name satisfied by " . $recipe->pkg_roots->{$name} . "=$root; skipping install" if $verbose;
@@ -160,6 +161,8 @@ class Alien::Xrepo::Build v1.0.1 {
             }
             my $version = $recipe->version_for($name);
             say "Installing $name" . ( defined $version && length $version ? " $version" : '' ) . '...' if $verbose;
+            my %env = $self->_manager_tool_env($name);
+            local @ENV{ keys %env } = values %env if %env;
             my $info;
             my $attempt = 0;
             while (1) {
@@ -199,8 +202,11 @@ class Alien::Xrepo::Build v1.0.1 {
             my %opts = $recipe->opts_for( $name, %$profile );
             my $inst = $self->_pkg_installdir($name);
             $opts{installdir} = $inst if defined $inst;
+            my %env = $self->_manager_tool_env($name);
+            local @ENV{ keys %env } = values %env if %env;
             my $info;
             eval { $info = $r->fetch( $name, $recipe->version_for($name), %opts ); };
+
             if ($@) {
                 warn "[!] $name could not be gathered: $@\n";
                 $runtime_prop->{errors}{$name} //= "$@";
@@ -337,12 +343,37 @@ class Alien::Xrepo::Build v1.0.1 {
         !$opts{force};
     }
 
+    method _install_order () {
+        my @pkgs = $recipe->packages;
+        my %ns;
+        for my $name (@pkgs) {
+            $ns{$1} = 1 if $name =~ /^([^:]+)::/;
+        }
+        my @tools = grep { $ns{$_} } @pkgs;
+        my @rest  = grep { !$ns{$_} } @pkgs;
+        return ( @tools, @rest );
+    }
+
+    method _manager_tool_env ($name) {
+        return () unless $name =~ /^([^:]+)::/;
+        my $ns  = $1;
+        my $rec = $runtime_prop->{packages}{$ns} // {};
+        return () unless ref $rec eq 'HASH';
+        my $dir = $rec->{installdir};
+        return () unless defined $dir && length $dir;
+        my $sep = $Config::Config{path_sep} // ( $^O eq 'MSWin32' ? ';' : ':' );
+        my %env = ( PATH => join( $sep, $dir, ( $ENV{PATH} // () ) ) );
+        $env{VCPKG_ROOT} = $dir if $ns eq 'vcpkg';
+        return %env;
+    }
+
     # Shallow share install: when a share_dir is set, every package is installed
     # into <share_dir>/<pkg> (its own little store) so the dist ships its own copy
     # of the libraries and never depends on the xmake cache at runtime. The
     # snapshot records those paths share-relative (see export/_share_rebase).
     method _pkg_installdir ($name) {
         return () unless defined $share_dir && length $share_dir;
+        return () if $name =~ /::/;
         return path($share_dir)->absolute->child($name)->stringify;
     }
 
