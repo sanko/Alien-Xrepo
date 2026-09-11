@@ -74,3 +74,5 @@ article.md
 /eg/.xmake/
 
 eg/deps.dot
+
+*.tar.gz

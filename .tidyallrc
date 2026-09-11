@@ -2,7 +2,7 @@
 ; Run "tidyall -g" to process all added or modified files in the current git working directory.
 ; https://perladvent.org/2020/2020-12-01.html
 
-ignore = **/*.bak **/_*.pm blib/**/* builder/_alien/**/* extract/**/* _build_xmake/**/* eg/xmake-inst/**/* t/test/**/* eg/test/**/*
+ignore = **/*.bak **/*.old **/_*.pm blib/**/*
 
 [PerlTidy]
 select = **/*.{pl,pm,t}
@@ -16,7 +16,7 @@ argv = -anl -baao --check-syntax --closing-side-comments-balanced -nce -dnl --de
 ;argv = -severity 3
 
 [PodTidy]
-select = lib/**/*.{pm,pod}
+select = lib/**/*.{pm,pod} eg/**/*.{pm,pod}
 columns = 120
 
 [PodChecker]
@@ -42,4 +42,3 @@ select = **/*.{hpp,cpp,cxx,h,c}
 ;select = **/*.json
 select = META.json
 ascii = 1
-
