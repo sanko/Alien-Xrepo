@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Alien::Xrepo - Install shared libraries and third-party binaries (tools, interpreters) for FFI, XS, and build systems
+Alien::Xrepo - Install libraries and third-party binaries for FFI, XS, and build systems
 
 =head1 SYNOPSIS
 
