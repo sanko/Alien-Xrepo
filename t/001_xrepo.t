@@ -9,7 +9,7 @@ use File::Temp qw[tempdir];
 #
 ok $Alien::Xrepo::VERSION, 'Alien::Xrepo::VERSION';
 #
- my $TODO = q[cmake might not build but that ain't *that* important if we pass everything else...];
+my $TODO = q[cmake might not build but that ain't *that* important if we pass everything else...];
 eval {
     my $repo  = Alien::Xrepo->new( verbose => 0, kind => 'shared' );
     my $xmake = Alien::Xmake->new;
