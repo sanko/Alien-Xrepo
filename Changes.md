@@ -5,6 +5,16 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `system` recipe option. With `system => 1` a package is allowed to resolve from the system (Homebrew, apt, vcpkg, ...), which makes `add_extsources()` in a package recipe usable again. Without it an install is a private build into its own store, as before.
+
+### Fixed
+
+- `system` installs no longer collapse into a source build. xrepo's install shim re-execs `xmake require --extra={...,system=false}` unconditionally, which turned off system detection for every install; a `system` install is now driven through a generated package file, which is the one input for which the shim leaves the decision to the caller.
+
 ## [v1.0.2] - 2026-10-04
 
 - Make some of the flaky tests Author's tests. Their failure means very little, honestly, and could fail for a lot of reasons.
