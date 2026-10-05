@@ -774,6 +774,32 @@ class Alien::Xrepo v1.0.2 {
         return $decoded;
     }
 
+    # Recover the library artifacts xrepo failed to list. A port that ships only static archives (a vcpkg zlib, say)
+    # can come back with an install tree but an empty `libfiles`, which used to drop the package into the header-only
+    # branch below and hand consumers an undef libpath for a package that plainly ships a library. Scans the linkdirs
+    # xrepo did report, then the conventional lib/lib64 under the install root, and returns ( libfiles, linkdirs ) so a
+    # directory that actually yielded something joins linkdirs and the -L flags agree with libfiles. Both come back
+    # untouched for a genuinely header-only package.
+    method _scan_libfiles ( $installdir, $linkdirs ) {
+        my $ext  = $^O eq 'MSWin32' ? qr/\.(?:dll|lib)\z/i : qr/\.(?:dylib|a|so(?:\.[\d.]+)?)\z/i;
+        my @dirs = @$linkdirs;
+        push @dirs, map { path($installdir)->child($_)->stringify } qw[lib lib64] if defined $installdir && length $installdir;
+        my ( @libfiles, %found_in );
+        for my $dir (@dirs) {
+            next unless -d $dir;
+            my @found = map { $_->stringify } grep { $_->is_file && $_->basename =~ $ext } path($dir)->children;
+            next unless @found;
+            push @libfiles, @found;
+            $found_in{$dir} = 1;
+        }
+        return ( [], $linkdirs ) if !@libfiles;
+        my @all = @$linkdirs;
+        for my $dir (@dirs) {
+            push @all, $dir if $found_in{$dir} && !grep { $_ eq $dir } @all;
+        }
+        return ( \@libfiles, \@all );
+    }
+
     method _process_info ($info) {
         $info = $info->[0] if ref $info eq 'ARRAY';
         return () unless ref $info eq 'HASH';
@@ -801,6 +827,10 @@ class Alien::Xrepo v1.0.2 {
         unless (@$bindirs) {
             $bindirs = [ path( $installdir, 'bin' )->stringify ] if $installdir && -d path( $installdir, 'bin' );
         }
+
+        # An install tree that plainly holds libraries but was reported without any is not header-only; fill the list
+        # in before `kind` is inferred so the package is still classified as a library below.
+        ( $libfiles, $linkdirs ) = $self->_scan_libfiles( $installdir, $linkdirs ) if !@$libfiles;
 
         # A package that ships neither libraries nor headers but has an install root is a binary tool (ninja, cmake,
         # node, ...); anything else is a library (or header-only). xrepo only reports `kind` for the former.
