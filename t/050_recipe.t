@@ -25,10 +25,8 @@ subtest 'inline defs normalize like Base pkg_name' => sub {
     is $recipe->version_for('libsdl3'), '3.4.12', 'per-package version';
 };
 subtest 'system is accepted as a recipe default and a per-package def' => sub {
-    my $recipe = Alien::Xrepo::Build::Recipe->new(
-        packages => [ 'zstd', { name => 'libsdl3', system => 0 } ],
-        defaults => { system => 1, kind => 'shared' }
-    );
+    my $recipe = Alien::Xrepo::Build::Recipe->new( packages => [ 'zstd', { name => 'libsdl3', system => 0 } ],
+        defaults => { system => 1, kind => 'shared' } );
 
     # opts_for takes the defaults as ambient opts, the way Build.pm passes the profile.
     is $recipe->defaults->{system}, 1, 'system accepted in defaults';

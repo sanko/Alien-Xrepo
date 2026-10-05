@@ -31,7 +31,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Alien::Xmake" : "v1.0.3",
+            "Alien::Xmake" : "v1.0.4",
             "Module::Build::Tiny" : "0",
             "perl" : "v5.40.0"
          }
@@ -62,7 +62,7 @@
       },
       "runtime" : {
          "requires" : {
-            "Alien::Xmake" : "v1.0.3",
+            "Alien::Xmake" : "v1.0.4",
             "Capture::Tiny" : "0",
             "ExtUtils::MakeMaker" : "0",
             "File::ShareDir" : "0",
@@ -123,7 +123,7 @@
          "version" : "v1.0.2"
       }
    },
-   "release_status" : "stable",
+   "release_status" : "testing",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/sanko/Alien-Xrepo/issues"

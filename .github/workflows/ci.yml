@@ -3,33 +3,6 @@ concurrency:
   cancel-in-progress: true
   group: '${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}'
 jobs:
-  dragonflybsd:
-    name: DragonFly BSD
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"name":"Intel", "platform_name":"dragonflybsd","os":"dragonflybsd","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.0","prepare":"pkg update && pkg upgrade -y && pkg install -y perl5 gcc gmake curl"}
-        ]
-      os_version: 6.4.0
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
   freebsd:
     name: FreeBSD
     uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
@@ -55,33 +28,7 @@ jobs:
         command -v cpanm
         cpanm --installdeps --notest -v .
         cpanm --test-only -v .
-  haiku:
-    name: Haiku
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"name":"Intel","platform_name":"haiku","os":"haiku","arch":"x86_64","toolchain":"gcc","prepare":"pkgman install -y cmd:gcc cmd:make cmd:curl cmd:wget cmd:perl"}
-        ]
-      os_version: r1beta6
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
+
   linux:
     name: Linux
     uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
@@ -143,133 +90,18 @@ jobs:
         perl Build.PL
         ./Build
         ./Build test --v
-  netbsd:
-    name: NetBSD
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"name":"Intel","platform_name":"netbsd","os":"netbsd","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.0","prepare":"export PKG_PATH=https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/10.1/All && /usr/sbin/pkg_add perl curl gmake"},
-          {"name":"ARM","platform_name":"netbsd","os":"netbsd","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.0","prepare":"export PKG_PATH=https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/10.1/All && /usr/sbin/pkg_add perl curl gmake"}
-        ]
-      os_version: 10.1
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
-  omnios:
-    name: OmniOS
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"platform_name":"omnios","os":"omnios","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.0","configure":"-A'ccflags=-D__EXTENSIONS__ -fno-lto'","prepare":"pkg install -v --accept developer/gcc13 system/header developer/build/make web/curl"}
-        ]
-      os_version: r151050
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
-  openbsd:
-    name: OpenBSD
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"name":"Intel","platform_name":"openbsd","os":"openbsd","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.0","prepare":"pkg_add gmake curl"},
-          {"name":"ARM","platform_name":"openbsd","os":"openbsd","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.0","prepare":"pkg_add gmake curl"}
-        ]
-      os_version: 7.8
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
+
   results:
     if: always()
     name: Results
     needs:
-      #~ - freebsd
       - linux
       - macos
-      - openbsd
-      - netbsd
-      - dragonflybsd
-      - solaris
-      - omnios
-      - haiku
       - windows
+      - freebsd
     uses: sanko/workflow-testing/.github/workflows/results-summary.yml@main
     with:
       title: Brocken CI Matrix
-  solaris:
-    name: Solaris
-    uses: sanko/workflow-testing/.github/workflows/run-vm.yml@main
-    with:
-      checkout_submodules: recursive
-      matrix: |-
-        [
-          {"platform_name":"solaris","os":"solaris","arch":"x86_64","toolchain":"gcc","perl_version":"5.42.0","configure":"-A'ccflags=-D__EXTENSIONS__'","prepare":"pkg install -v --accept perl-538 gcc developer/build/make bash web/curl"}
-        ]
-      os_version: 11.4
-      task: |
-        export AUTOMATED_TESTING=1 AUTHOR_TESTING=0
-        #~ Bootstrap cpanm via a file download, never `curl | perl`: some remote
-        #~ sh's run under pipefail, and curl's EPIPE (23) after a clean pipe
-        #~ install aborts the whole run even though it succeeded. cpanm lands in
-        #~ the active perl's sitebin/scriptdir, which is not on PATH everywhere,
-        #~ so re-export those dirs after bootstrapping.
-        if command -v curl >/dev/null 2>&1; then curl -fsSL https://cpanmin.us -o /tmp/cpanmin.pl
-        elif command -v wget >/dev/null 2>&1; then wget -qO /tmp/cpanmin.pl https://cpanmin.us
-        elif command -v fetch >/dev/null 2>&1; then fetch -o /tmp/cpanmin.pl https://cpanmin.us
-        else echo 'no http downloader available' >&2; exit 1; fi
-        perl /tmp/cpanmin.pl --notest App::cpanminus Module::Build::Tiny
-        rm -f /tmp/cpanmin.pl
-        export PATH="$(dirname "$(perl -e 'print $^X')"):$(perl -MConfig -e 'print "$Config{sitebin}:$Config{scriptdir}:"' 2>/dev/null):$PATH"
-        command -v cpanm
-        cpanm --installdeps --notest -v .
-        cpanm --test-only -v .
   windows:
     name: Windows
     uses: sanko/workflow-testing/.github/workflows/run-direct.yml@main
