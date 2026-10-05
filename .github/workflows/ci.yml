@@ -37,8 +37,8 @@ jobs:
       checkout_submodules: recursive
       matrix: |-
         [
-          {"name":"Intel","platform_name":"freebsd","os":"freebsd","arch":"x86_64","toolchain":"gcc","prepare":"pkg install -y perl5 curl"},
-          {"name":"ARM","platform_name":"freebsd","os":"freebsd","arch":"aarch64","toolchain":"gcc","prepare":"pkg install -y perl5 curl"}
+          {"name":"Intel","platform_name":"freebsd","os":"freebsd","arch":"x86_64","toolchain":"gcc","prepare":"pkg install -y perl5 gmake curl"},
+          {"name":"ARM","platform_name":"freebsd","os":"freebsd","arch":"aarch64","toolchain":"gcc","prepare":"pkg install -y perl5 gmake curl"}
         ]
       os_version: 14.1
       task: |
