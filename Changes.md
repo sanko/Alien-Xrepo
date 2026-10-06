@@ -5,6 +5,12 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Windows: `xmake create` (used to seed a work project before an install/fetch) no longer dies with "cannot open file ... Permission denied". ExtUtils::Install leaves Alien::Xmake's templates read-only (mode 0444), which survives xmake's `{writeable=true}` copy, so the built-in templates are mirrored into the user's writable xmake global dir (`%LOCALAPPDATA%\.xmake\templates` on Windows), which xmake resolves ahead of its own read-only copies. The installed tree under perl/lib stays just as ExtUtils::Install left it.
+
 ## [v1.0.3] - 2026-10-06
 
 ### Added

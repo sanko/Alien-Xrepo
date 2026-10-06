@@ -601,8 +601,56 @@ class Alien::Xrepo v1.0.3 {
         }
     }
 
+    method _ensure_templates_available() {
+        return unless $^O eq 'MSWin32';
+        my $exe = eval { $xmake->exe };
+        return unless defined $exe && length $exe && -e $exe;
+        my $src = path($exe)->parent->child('templates');
+        return unless $src->is_dir;
+
+        # ExtUtils::Install ships these as 0444, and on Windows that attribute survives xmake's
+        # {writeable=true} copy, so `xmake create` dies "cannot open file ... Permission denied" while
+        # rewriting the copied xmake.lua. The installed tree under perl/lib should stay read-only, so mirror
+        # the built-in templates into the user's writable xmake global dir instead -- <globaldir>/templates,
+        # xmake's own per-user override, which it resolves before <programdir>/templates. Seeded once per
+        # installed xmake version; an upgrade recopies the mirror wholesale.
+        #
+        # The global dir comes from xmake itself: its `~` mapping (LOCALAPPDATA on Windows) and the
+        # %APPDATA% legacy fallback are not portable to replicate in Perl, but `lua -c` prints the very
+        # directory create will consult. Single-quoted Lua strings only: win32's naive argv quoting mangles
+        # embedded double quotes (which surfaces as a bogus "Can't spawn" warning and exit 255).
+        my $script = q{import('core.base.global'); print('XREPO_GLOBALDIR=' .. global.directory())};
+        my $lines  = capture { system $exe, 'lua', '-c', $script };
+        my ($gldir) = $lines =~ /^XREPO_GLOBALDIR=(.+)$/m;
+        return unless defined $gldir;
+        $gldir =~ s/\s+$//;
+        my $dst = path($gldir)->child('templates');
+        $dst->mkpath;
+
+        my $marker = $dst->child('.alien-xrepo-synced');
+        my $ver    = eval { $xmake->_getver } // '';
+        my $synced = $marker->exists ? $marker->slurp : '';
+        return if length $synced && ( !length $ver || $synced eq "$ver\n" );
+        $src->visit(
+            sub {
+                my $file = shift;
+                return if $file->is_dir;
+                my $to = $dst->child( $file->relative($src) );
+                $to->parent->mkpath;
+
+                # Windows copies carry the source's read-only attribute with them, so force the per-user mirror
+                # writable (it lives in <globaldir>/templates, xmake's own mutable per-user template override).
+                $file->copy($to);
+                $to->chmod( $to->stat->mode | 0200 );
+            },
+            { recurse => 1 }
+        );
+        $marker->spew("$ver\n");
+    }
+
     method _argv ( $action, $flags, @spec ) {
         $self->_ensure_working_project;
+        $self->_ensure_templates_available;
         @spec = grep {defined} @spec;
         return ( $xmake->exe, qw[lua private.xrepo], $action, @$flags, @spec );
     }
