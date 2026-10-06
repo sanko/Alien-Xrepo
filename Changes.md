@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `system` installs no longer collapse into a source build. xrepo's install shim re-execs `xmake require --extra={...,system=false}` unconditionally, which turned off system detection for every install; a `system` install is now driven through a generated package file, which is the one input for which the shim leaves the decision to the caller.
-- A package reported with an install tree but no `libfiles` is no longer mistaken for a header-only package. xrepo can return an empty `libfiles` for a port that ships only static archives (a vcpkg `zlib`, for one), which left `libpath`/`ffi_lib` undef for a package that plainly has a library to link. The reported linkdirs and the conventional `lib`/`lib64` under the install root are scanned for the artifacts, and a directory that yields something joins `linkdirs` so the `-L` flags agree with `libfiles`.
+- `system` installs no longer automatically collapse into a source build.
+- A package reported with an install tree but no `libfiles` is no longer mistaken for a header-only package.
 
 ## [v1.0.2] - 2026-10-04
 
