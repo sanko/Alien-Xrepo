@@ -4,7 +4,7 @@ abstract: "Interface with xrepo's package management"
 author:
   - 'Sanko Robinson'
 build_requires:
-  Alien::Xmake: v1.0.3
+  Alien::Xmake: v1.0.4
   Capture::Tiny: '0'
   File::Temp: '0'
   Module::Build::Tiny: '0'
@@ -60,7 +60,7 @@ provides:
     file: lib/Alien/Xrepo/Runtime.pm
     version: v1.0.2
 requires:
-  Alien::Xmake: v1.0.3
+  Alien::Xmake: v1.0.4
   Capture::Tiny: '0'
   ExtUtils::MakeMaker: '0'
   File::ShareDir: '0'

@@ -231,15 +231,15 @@ Resolution is staged so repeated calls avoid the `xmake` process startup cost en
 
     - `theme`
 
-        Per-call `xmake` output theme override. Defaults to the `theme` constructor value (`plain`). See ["new( ... )"](#new).
+        Per-call `xmake` output theme override. Defaults to the `theme` constructor value (`plain`). See ["new( \[...\] )"](#new).
 
     - `yes`, `confirm`
 
-        Per-call auto-confirmation overrides for the constructor `yes => ...` / `confirm => ...` options, applied as `-y` or `--confirm=...` to the underlying `xrepo` invocation. Defaults to the constructor values. See ["new( ... )"](#new).
+        Per-call auto-confirmation overrides for the constructor `yes => ...` / `confirm => ...` options, applied as `-y` or `--confirm=...` to the underlying `xrepo` invocation. Defaults to the constructor values. See ["new( \[...\] )"](#new).
 
     - `cache`
 
-        Per-call override for the constructor `cache` option (default on). Pass `cache => 0` to skip the on-disk replay for this one resolution (still fetch-first). See ["new( ... )"](#new).
+        Per-call override for the constructor `cache` option (default on). Pass `cache => 0` to skip the on-disk replay for this one resolution (still fetch-first). See ["new( \[...\] )"](#new).
 
 Returns an [Alien::Xrepo::PackageInfo](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3APackageInfo) object.
 
@@ -413,7 +413,7 @@ Updates the local package lists from the remote repositories.
 
 - **Disabling**
 
-    Pass `cache => 0` to the ["new( ... )"](#new) constructor, or as a per-call option to ["`install( ... )`"](#install), to force live resolution. [Alien::Xrepo::Runtime](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ARuntime) and [Alien::Xrepo::Build](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ABuild) accept the same constructor flag and forward it to the engine they create.
+    Pass `cache => 0` to the ["new( \[...\] )"](#new) constructor, or as a per-call option to ["`install( ... )`"](#install), to force live resolution. [Alien::Xrepo::Runtime](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ARuntime) and [Alien::Xrepo::Build](https://metacpan.org/pod/Alien%3A%3AXrepo%3A%3ABuild) accept the same constructor flag and forward it to the engine they create.
 
 # Package Info
 
