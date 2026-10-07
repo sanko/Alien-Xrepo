@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo v1.0.3 {
+class Alien::Xrepo v1.0.4 {
     use Alien::Xmake;
     use JSON::PP;
     use Digest::SHA qw[sha1_hex];
@@ -52,7 +52,7 @@ class Alien::Xrepo v1.0.3 {
         return;
     }
     #
-    class Alien::Xrepo::PackageInfo v1.0.3 {
+    class Alien::Xrepo::PackageInfo v1.0.4 {
         use Path::Tiny;
         field $includedirs : param : reader;
         field $libfiles    : param : reader;
@@ -619,14 +619,13 @@ class Alien::Xrepo v1.0.3 {
         # %APPDATA% legacy fallback are not portable to replicate in Perl, but `lua -c` prints the very
         # directory create will consult. Single-quoted Lua strings only: win32's naive argv quoting mangles
         # embedded double quotes (which surfaces as a bogus "Can't spawn" warning and exit 255).
-        my $script = q{import('core.base.global'); print('XREPO_GLOBALDIR=' .. global.directory())};
-        my $lines  = capture { system $exe, 'lua', '-c', $script };
+        my $script  = q{import('core.base.global'); print('XREPO_GLOBALDIR=' .. global.directory())};
+        my $lines   = capture { system $exe, 'lua', '-c', $script };
         my ($gldir) = $lines =~ /^XREPO_GLOBALDIR=(.+)$/m;
         return unless defined $gldir;
         $gldir =~ s/\s+$//;
         my $dst = path($gldir)->child('templates');
         $dst->mkpath;
-
         my $marker = $dst->child('.alien-xrepo-synced');
         my $ver    = eval { $xmake->_getver } // '';
         my $synced = $marker->exists ? $marker->slurp : '';
@@ -909,8 +908,21 @@ class Alien::Xrepo v1.0.3 {
         my $runtime_lib;
         if ( $^O eq 'MSWin32' ) {
 
-            # Check if the DLL is already in libfiles (MinGW often does this)
-            ($runtime_lib) = grep {/\.dll$/i} @$libfiles;
+            # Check if the lib is already in libfiles (MinGW often does this). A package can ship several libs
+            # (SDL3_image plus its optional codec DLLs, for one), and the scan order is the order the filesystem hands
+            # them back - case-insensitive on NTFS, so libavif-16.dll comes before SDL3_image.dll. Prefer the DLL named
+            # by the package's own `links` instead of taking whatever sorted first.
+            my @dlls = grep {/\.dll$/i} @$libfiles;
+            if (@dlls) {
+                my $norm = sub {
+                    my $n = lc $_[0];
+                    $n =~ s/^lib//;
+                    $n;
+                };
+                my %want = map { $norm->($_) => 1 } grep { defined && length } @{ $info->{links} // [] };
+                ($runtime_lib) = grep { $want{ $norm->( path($_)->basename(qr/\.dll$/i) ) } } @dlls;
+                $runtime_lib //= $dlls[0];
+            }
 
             # If not, we must hunt for it in the 'bin' directory sibling to the 'lib' directory.
             unless ($runtime_lib) {
@@ -984,9 +996,3 @@ class Alien::Xrepo v1.0.3 {
 };
 #
 1;
-__END__
-Copyright (C) Sanko Robinson.
-
-This library is free software; you can redistribute it and/or modify it under the terms found in
-the Artistic License 2. Other copyrights, terms, and conditions may apply to data transmitted
-through this module.
