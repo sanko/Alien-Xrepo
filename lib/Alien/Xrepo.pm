@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo v1.0.5 {
+class Alien::Xrepo v1.0.6 {
     use Alien::Xmake;
     use JSON::PP;
     use Digest::SHA qw[sha1_hex];
@@ -52,7 +52,7 @@ class Alien::Xrepo v1.0.5 {
         return;
     }
     #
-    class Alien::Xrepo::PackageInfo v1.0.5 {
+    class Alien::Xrepo::PackageInfo v1.0.6 {
         use Path::Tiny;
         field $includedirs  : param : reader;
         field $libfiles     : param : reader;
