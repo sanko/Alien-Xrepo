@@ -5,9 +5,9 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.0.6] - 2026-10-14
 
-Alpha runtime dependency diagnostic for FFI libraries. If, say libsdl3_ttf requires freetype, Alien::Xrepo will list these dependencies.
+Alpha runtime dependency diagnostic for FFI libraries. If, say libsdl3_ttf requires freetype, Alien::Xrepo will let you know.
 
 It's... a work in progress.
 
@@ -16,11 +16,11 @@ It's... a work in progress.
 - Runtime dependency diagnostic for FFI libraries:
   - `Alien::Xrepo` gains `runtime_deps`, `fetch_closure`, `scan_runtime_deps`, `loader_env_var`, and `dep_search_dirs`.
   - `Alien::Xrepo::PackageInfo` gains the `deps` and `runtime_deps` fields plus `with_runtime_deps`.
-- `Alien::Xrepo::Runtime` exposes the diagnostic through `runtime_deps`, `foreign_runtime_deps`, `runtime_dep_dirs`, `runtime_dep_report`, and `loader_env_var`. `package_info` attaches the list (opt out with `check_runtime_deps => 0`), while a loaded snapshot stays hermetic.
 
 ### Changed
 
-- `Alien::Xrepo::Build` records each package's runtime dependencies right after install/gather, so they ride into the snapshot and back out through `Runtime::package_info` without a second scan, warning when a dependency is `unresolved`. Shallow-install and snapshot path rebasing now also covers `runtime_deps`.
+- `Alien::Xrepo::Build` records each package's runtime dependencies so they ride into the snapshot and back out through `Runtime::package_info` without a second scan. Also warns when a dependency is `unresolved`.
+- Require `Alien::Xmake` v1.0.5
 
 ## [v1.0.5] - 2026-10-14
 
@@ -79,7 +79,8 @@ Splitting this out of the `Alien::Xmake` dist and repo
 
 - It exists? Check the Alien::Xmake changelog, I guess
 
-[Unreleased]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.6...HEAD
+[v1.0.6]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.5...v1.0.6
 [v1.0.5]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.4...v1.0.5
 [v1.0.4]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.3...v1.0.4
 [v1.0.3]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.2...v1.0.3
