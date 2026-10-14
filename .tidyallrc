@@ -2,13 +2,21 @@
 ; Run "tidyall -g" to process all added or modified files in the current git working directory.
 ; https://perladvent.org/2020/2020-12-01.html
 
-ignore = **/*.bak **/*.old **/_*.pm blib/**/* eg/examples/**/*
+; Selects are deliberately scoped to the source directories instead of root-level `**`
+; globs. Code::TidyAll expands every select AND every ignore with zglob before it
+; filters, and never prunes directories, so a root-level `**/*` walks the entire tree --
+; including the tens of thousands of untracked build artifacts under eg/examples (blib
+; trees, bundled headers, tarballs). Nothing there is ever tidied, so keeping the globs
+; out of eg/examples makes `tidyall -a` instant instead of spending minutes enumerating.
+ignore = lib/**/_*.pm t/**/_*.pm eg/_*.pm
 
 [PerlTidy]
-select = **/*.{pl,pm,t}
+select = lib/**/*.{pl,pm,t}
+select = t/**/*.{pl,pm,t}
+select = eg/*.pl
 select = cpanfile
 argv = -anl -baao --check-syntax --closing-side-comments-balanced -nce -dnl --delete-old-whitespace --delete-semicolons -fs -nhsc -ibc -bar -nbl -ohbr -opr -osbr -nsbl -nasbl -otr -olc --perl-best-practices --nostandard-output -sbc -nssc --break-at-old-logical-breakpoints --break-at-old-keyword-breakpoints --break-at-old-ternary-breakpoints --ignore-old-breakpoints --swallow-optional-blank-lines --iterations=2 --maximum-line-length=150 --paren-vertical-tightness=0 --trim-qw -b -bext=old
-;argv = -noll -it=2 -l=100 -i=4 -ci=4 -se -b -bar -boc -vt=0 -vtc=0 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nolq -npro -nsfs --opening-hash-brace-right --no-outdent-long-comments -wbb="% + - * / x != == >= <= =~ !~ < > | & >= < = **= += *= &= <<= &&= -= /= |= >>= ||= .= %= ^= x=" --iterations=2
+;argv = -noll -it=2 -l=100 -i=4 -ci=4 -se -b -bar -boc -vt=0 -vtc=0 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nolq -npro -nsfs --opening-hash-brace-right --no-outdent-long-comments -wbb="% + - * / x != == >= <= =~ !~ < > | & >= < <= = **= += *= &= <<= &&= -= /= |= >>= ||= .= %= ^= x=" --iterations=2
 
 ;[PerlCritic]
 ;select = lib/**/*.pm
@@ -16,11 +24,13 @@ argv = -anl -baao --check-syntax --closing-side-comments-balanced -nce -dnl --de
 ;argv = -severity 3
 
 [PodTidy]
-select = lib/**/*.{pm,pod} eg/**/*.{pm,pod}
+select = lib/**/*.{pm,pod}
 columns = 120
 
 [PodChecker]
-select = **/*.{pl,pm,pod}
+select = lib/**/*.{pl,pm,pod}
+select = t/**/*.{pl,pm,t}
+select = eg/*.pl
 warnings = 1
 
 ;[Test::Vars]
@@ -32,7 +42,9 @@ warnings = 1
 ;suggest = 1
 
 [ClangFormat]
-select = **/*.{hpp,cpp,cxx,h,c}
+; Only checked-in C/C++ sources. eg/examples ships bundled third-party headers (and
+; nothing outside eg/examples is C/C++ today), so scoping this keeps it from walking them.
+select = lib/**/*.{hpp,cpp,cxx,h,c}
 ; see .clang-format
 
 ;[YAML]
