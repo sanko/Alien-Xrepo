@@ -166,6 +166,23 @@ The recipe's package names in declaration order (the first is the primary packag
 
 The recipe's normalized per-package definition hashref.
 
+=item C<has_snapshot( )>
+
+True when a snapshot was supplied or auto-detected, regardless of whether every package it names resolved. Lets a
+consumer's tests distinguish a genuinely cold checkout (no snapshot: resolution stays lazy and may legitimately be
+empty) from a distribution whose snapshot was written but is incomplete.
+
+=item C<snapshot_path( )>
+
+The path of the snapshot that was loaded, or C<undef> when resolution is dynamic.
+
+=item C<snapshot_errors( )>
+
+The per-package error map recorded in the loaded snapshot (C<< { <package> => <message> } >>), or an empty hashref when
+there is no snapshot or it recorded no failures. A non-empty map means the build that produced the snapshot failed to
+install those packages; test suites use it to report I<why> a snapshot is unusable rather than just that a package is
+missing.
+
 =item C<split_flags( $flags, [$pkg] )>
 
 Splits a flag string on whitespace and returns the individual flags in a Windows-safe list form. The package argument

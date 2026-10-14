@@ -2,7 +2,7 @@ use v5.40;
 use feature qw[class try];
 no warnings 'experimental::class';
 #
-class Alien::Xrepo::Runtime v1.0.4 {
+class Alien::Xrepo::Runtime v1.0.5 {
     use Alien::Xrepo;
     use Alien::Xrepo::Build::Recipe;
     use Config   ();
@@ -26,6 +26,8 @@ class Alien::Xrepo::Runtime v1.0.4 {
     field $snap              = {};                   # package => raw snapshot data
     field $r                 = undef;                # resolved Alien::Xrepo engine
     field $snap_install_type = undef;
+    field $snap_file      :reader(snapshot_path)   = undef;                # path of the snapshot actually loaded, if any
+    field $snap_errors    :reader(snapshot_errors)   = {};                   # package => build error recorded in that snapshot
     #
     ADJUST {
         if ( !defined $pkg_name && !defined $recipe ) {
@@ -56,6 +58,8 @@ class Alien::Xrepo::Runtime v1.0.4 {
     method package_names () { $recipe_obj->packages }
     method package_defs ()  { $recipe_obj->package_defs }
     #
+    method has_snapshot    () { defined $snap_file }
+    #
     # Hermetic mode: a snapshot file wins entirely (no xrepo subprocess).
     method _load_snapshot () {
         my $file = $snapshot;
@@ -69,6 +73,8 @@ class Alien::Xrepo::Runtime v1.0.4 {
         return unless ref $data eq 'HASH';
         $snap              = $data->{packages} // {};
         $snap_install_type = $data->{install_type};
+        $snap_file         = "$file";
+        $snap_errors       = $data->{errors} // {};
         my $base = path($file)->parent;
         for my $name ( keys %$snap ) {
             my %pkg = %{ $snap->{$name} };
@@ -191,7 +197,7 @@ class Alien::Xrepo::Runtime v1.0.4 {
     method package_info ( $pkg = undef ) { $self->_pkg_info($pkg) }
 };
 #
-class Alien::Xrepo::Runtime::Alt v1.0.4 {
+class Alien::Xrepo::Runtime::Alt v1.0.5 {
     field $base : param;
     field $pkg : reader(pkg_name) : param;
     method package_names ()      { $base->package_names }

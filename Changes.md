@@ -5,6 +5,17 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `Alien::Xrepo::Build::assert_installed`, an opt-in all-or-nothing check a packaging caller runs after `run()`: it drops the just-written snapshot and dies listing every package that failed, so a dist with a broken package fails its build instead of being reported green. `run()` itself stays non-fatal so one failed package never hides the siblings that did install.
+- `Alien::Xrepo::Runtime` snapshot introspection: `has_snapshot`, `snapshot_path`, and `snapshot_errors`, so a consumer's tests can tell a cold checkout (no snapshot) from a snapshot that was written but is incomplete (a failed build).
+
+### Changed
+
+- `Alien::Xrepo::MB` and `Alien::Xrepo::MM` now call `assert_installed` after the build, turning a partial or failed install into a build failure.
+
 ## [v1.0.4] - 2026-10-07
 
 ### Fixed
