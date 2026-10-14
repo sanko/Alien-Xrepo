@@ -7,7 +7,7 @@ jobs:
     with:
       matrix: |
         [
-          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"gcc","perl_version":"5.40.5"}
+          {"platform_name":"ubuntu","os":"ubuntu-latest","arch":"x86_64","toolchain":"gcc","perl_version":"5.40.5","prepare":"sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev"}
         ]
       task: |
         perl -V
@@ -20,11 +20,15 @@ jobs:
         cpanm -v .
         #~ Hand each example dist under eg/examples/ off to cpanm (they inherit
         #~ the engine just installed). Fail the job if any dist fails.
+        #~ Exotic-Raylib6 needs the system OpenGL headers (xrepo's optional
+        #~ `opengl` dep); those arrive via the runner's `prepare` step above.
+        skip_re='Exotic-SQLite3'
         failed=0
         for dist in eg/examples/*/; do
-          case "$dist" in
-            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
-          esac
+          if printf '%s' "$dist" | grep -Eq "$skip_re"; then
+            echo "::warning::skipping $dist (unbuildable in this environment)"
+            continue
+          fi
           if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
             echo "::group::Building $dist"
             pushd "$dist"
@@ -52,7 +56,7 @@ jobs:
     with:
       matrix: |
         [
-          {"platform_name":"macos","os":"macos-15","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.3"}
+          {"platform_name":"macos","os":"macos-15","arch":"aarch64","toolchain":"gcc","perl_version":"5.42.3","prepare":"brew install openssl@3 go"}
         ]
       task: |
         perl -V
@@ -63,11 +67,16 @@ jobs:
         cpanm -v .
         #~ Hand each example dist under eg/examples/ off to cpanm. Fail the job
         #~ if any dist fails.
+        #~ Exotic-Lsquic needs BoringSSL headers; the xrepo `boringssl` recipe
+        #~ pulls in Go, and the system OpenSSL is the fallback (both come from
+        #~ the runner's `prepare` step above).
+        skip_re='Exotic-SQLite3'
         failed=0
         for dist in eg/examples/*/; do
-          case "$dist" in
-            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
-          esac
+          if printf '%s' "$dist" | grep -Eq "$skip_re"; then
+            echo "::warning::skipping $dist (unbuildable in this environment)"
+            continue
+          fi
           if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
             echo "::group::Building $dist"
             pushd "$dist"
@@ -107,11 +116,18 @@ jobs:
         cpanm -v .
         #~ Hand each example dist under eg/examples/ off to cpanm. Fail the job
         #~ if any dist fails.
+        #~ xrepo marks Exotic-Lsquic (and its BoringSSL dep) unsupported on
+        #~ mingw and Exotic-Vcpkg-zlib's host packages (vcpkg, zip)
+        #~ unsupported on msys; Exotic-Zlib resolves zlib from the runner's
+        #~ pre-installed vcpkg outside the isolated store, which Alien::Xrepo
+        #~ rejects by design. None of these can be built here, so skip them.
+        skip_re='Exotic-SQLite3|Exotic-Lsquic|Exotic-Vcpkg-zlib|Exotic-Zlib'
         failed=0
         for dist in eg/examples/*/; do
-          case "$dist" in
-            *Exotic-SQLite3*) echo "::warning::skipping $dist (known-broken example)"; continue ;;
-          esac
+          if printf '%s' "$dist" | grep -Eq "$skip_re"; then
+            echo "::warning::skipping $dist (unbuildable in this environment)"
+            continue
+          fi
           if [ -e "$dist/Build.PL" ] || [ -e "$dist/Makefile.PL" ]; then
             echo "::group::Building $dist"
             pushd "$dist"
