@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo::Build v1.0.4 {
+class Alien::Xrepo::Build v1.0.5 {
     use Alien::Xrepo;
     use Alien::Xrepo::Build::Recipe;
     use Path::Tiny;
@@ -77,6 +77,17 @@ class Alien::Xrepo::Build v1.0.4 {
         $self->export;
         $self->test;
         $self;
+    }
+
+    method assert_installed () {
+        my $errors = $runtime_prop->{errors} // {};
+        return $self unless %$errors;
+        if ( defined $snapshot && length $snapshot ) {
+            my $file = path($snapshot);
+            $file->remove if -e $file;
+        }
+        my @failed = sort keys %$errors;
+        die 'Alien::Xrepo: failed to install ' . join( ', ', @failed ) . ":\n" . join( "\n", map {"  $_: $errors->{$_}"} @failed ) . "\n";
     }
 
     method configure (%opts) {
