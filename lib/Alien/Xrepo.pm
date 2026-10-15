@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo v1.0.7 {
+class Alien::Xrepo v1.0.8 {
     use Alien::Xmake;
     use JSON::PP;
     use Digest::SHA qw[sha1_hex];
@@ -52,7 +52,7 @@ class Alien::Xrepo v1.0.7 {
         return;
     }
     #
-    class Alien::Xrepo::PackageInfo v1.0.7 {
+    class Alien::Xrepo::PackageInfo v1.0.8 {
         use Path::Tiny;
         field $includedirs  : param : reader;
         field $libfiles     : param : reader;
@@ -1054,6 +1054,8 @@ class Alien::Xrepo v1.0.7 {
         $linkdirs = [$linkdirs] unless ref $linkdirs eq 'ARRAY';
         my $bindirs = $info->{bindirs} // [];
         $bindirs = [$bindirs] unless ref $bindirs eq 'ARRAY';
+        my $links = $info->{links} // [];
+        $links = [$links] unless ref $links eq 'ARRAY';
         my $installdir = $info->{artifacts}{installdir};
         my $kind       = $info->{kind};
 
@@ -1089,7 +1091,7 @@ class Alien::Xrepo v1.0.7 {
                 libfiles     => [],
                 libpath      => undef,
                 linkdirs     => $linkdirs,
-                links        => $info->{links}   // [],
+                links        => $links,
                 license      => $info->{license} // undef,
                 shared       => $info->{shared}  // 0,
                 static       => $info->{static}  // 0,
@@ -1117,7 +1119,7 @@ class Alien::Xrepo v1.0.7 {
                     $n =~ s/^lib//;
                     $n;
                 };
-                my %want = map { $norm->($_) => 1 } grep { defined && length } @{ $info->{links} // [] };
+                my %want = map { $norm->($_) => 1 } grep { defined && length } @$links;
                 ($runtime_lib) = grep { $want{ $norm->( path($_)->basename(qr/\.dll$/i) ) } } @dlls;
                 $runtime_lib //= $dlls[0];
             }
@@ -1181,7 +1183,7 @@ class Alien::Xrepo v1.0.7 {
             libfiles     => $libfiles,
             libpath      => $runtime_lib,
             linkdirs     => $linkdirs,
-            links        => $info->{links}   // [],
+            links        => $links,
             license      => $info->{license} // undef,
             shared       => $info->{shared}  // 0,
             static       => $info->{static}  // 0,
