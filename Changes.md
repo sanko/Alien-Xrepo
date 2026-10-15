@@ -5,7 +5,7 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v1.0.8] - 2026-10-15
 
 ### Fixed
 
@@ -92,7 +92,8 @@ Splitting this out of the `Alien::Xmake` dist and repo
 
 - It exists? Check the Alien::Xmake changelog, I guess
 
-[Unreleased]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.8...HEAD
+[v1.0.8]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.7...v1.0.8
 [v1.0.7]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.6...v1.0.7
 [v1.0.6]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.5...v1.0.6
 [v1.0.5]: https://github.com/sanko/Alien-Xrepo/compare/v1.0.4...v1.0.5
