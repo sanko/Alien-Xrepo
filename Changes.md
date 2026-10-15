@@ -5,6 +5,12 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- A `system => 1` install no longer trips the pinned-store guard. Asking for system packages (Homebrew, apt, vcpkg, ...) trades the self-contained-store promise away on purpose, so a package that resolves outside `root`/`installdir` is accepted instead of rejected.
+
 ## [v1.0.6] - 2026-10-14
 
 Alpha runtime dependency diagnostic for FFI libraries. If, say libsdl3_ttf requires freetype, Alien::Xrepo will let you know.
