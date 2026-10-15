@@ -5,6 +5,13 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Limit each package to one registry refresh and one automatic retry per build tree. The counter is stored in checkpoint data so this limit is applied even if the build is resumed after a mid-stage failure.
+- Checkpoints now record each stage as completed *before* persisting, so a resumed build does not repeat tasks that completed in a previous attempt.
+
 ## [v1.0.6] - 2026-10-14
 
 Alpha runtime dependency diagnostic for FFI libraries. If, say libsdl3_ttf requires freetype, Alien::Xrepo will let you know.

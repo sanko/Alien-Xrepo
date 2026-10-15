@@ -2,7 +2,7 @@ use v5.40;
 use feature 'class';
 no warnings 'experimental::class';
 #
-class Alien::Xrepo v1.0.6 {
+class Alien::Xrepo v1.0.7 {
     use Alien::Xmake;
     use JSON::PP;
     use Digest::SHA qw[sha1_hex];
@@ -52,7 +52,7 @@ class Alien::Xrepo v1.0.6 {
         return;
     }
     #
-    class Alien::Xrepo::PackageInfo v1.0.6 {
+    class Alien::Xrepo::PackageInfo v1.0.7 {
         use Path::Tiny;
         field $includedirs  : param : reader;
         field $libfiles     : param : reader;
@@ -341,6 +341,8 @@ class Alien::Xrepo v1.0.6 {
     # A pinned store (constructor `root` or per-call `installdir`) promises a self-contained layout but xmake can
     # satisfy a requirement from the system (Homebrew, apt, ...) instead of building into the store. Such a resolution
     # lives OUTSIDE the pinned store, so it would silently break the promise; it is rejected here rather than returned.
+    # A caller that explicitly asked for system packages (see _package_file) has traded that promise away on purpose,
+    # so for those the guard stands down.
     method _finalize ( $data, %opts ) {
         return () unless defined $data;
         $data = $data->[0] if ref $data eq 'ARRAY';
@@ -351,6 +353,10 @@ class Alien::Xrepo v1.0.6 {
     method _guard_store ( $info, %opts ) {
         my $store = $self->_store_dir(%opts);
         return $info unless defined $store && length $store;
+
+        # `system` asks xmake to prefer the machine's own packages (Homebrew, apt, vcpkg, ...); resolving outside the
+        # store is the point of the request, not a violation of it, so the pinned-store promise does not apply.
+        return $info if $opts{system};
         return $info if $self->_in_store( $info, $store );
         my $found = $self->_anchor_of($info) // 'an unknown location';
         die "xrepo resolved a package outside the requested store (wanted '$store', found '$found'). " .

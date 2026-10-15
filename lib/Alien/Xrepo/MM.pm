@@ -1,6 +1,6 @@
 use v5.40;
 
-package Alien::Xrepo::MM v1.0.6 {
+package Alien::Xrepo::MM v1.0.7 {
     use Cwd      qw[getcwd];
     use JSON::PP qw[decode_json encode_json];
     use Path::Tiny;
