@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A `system => 1` install no longer trips the pinned-store guard. Asking for system packages (Homebrew, apt, vcpkg, ...) trades the self-contained-store promise away on purpose, so a package that resolves outside `root`/`installdir` is accepted instead of rejected.
+- Limit each package to one registry refresh and one automatic retry per build tree. The counter is stored in checkpoint data so this limit is applied even if the build is resumed after a mid-stage failure.
+- Checkpoints now record each stage as completed *before* persisting, so a resumed build does not repeat tasks that completed in a previous attempt.
 
 ## [v1.0.6] - 2026-10-14
 
