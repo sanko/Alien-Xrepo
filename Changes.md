@@ -5,6 +5,15 @@ All notable changes to Alien::Xrepo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- New `Alien::Xrepo` fields:
+  - `verbose`: Passes `-v` to `xrepo install` 
+  - `diagnosis`: Passes `-D` 
+- Both the `verbose` and `diagnosis` flags are honored per-call on `install` and may be set via the `Alien::Xrepo::Build` engine, `Alien::Xrepo::Runtime`, or the `Alien::Xrepo::MB` / `Alien::Xrepo::MM` `xrepo_verbose` / `xrepo_diagnosis` build properties.
+
 ## [v1.0.8] - 2026-10-15
 
 ### Fixed
