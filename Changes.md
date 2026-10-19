@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for optional recipe steps which produce non-fatal failures. One lib failing may still be a salvageable installion of other, required, packages.
+- Support for optional recipe steps which produce non-fatal failures. One lib failing may still be a salvageable installation of other, required, packages.
 
 ## [v1.0.9] - 2026-10-17
 
